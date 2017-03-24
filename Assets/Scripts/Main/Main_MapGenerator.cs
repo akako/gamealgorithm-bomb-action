@@ -1,8 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// マップジェネレータ
+/// </summary>
 public class Main_MapGenerator
 {
+    /// <summary>
+    /// マップ情報を生成します
+    /// </summary>
+    /// <param name="width">Width.</param>
+    /// <param name="height">Height.</param>
+    /// <param name="playerStartCoordinates">Player start coordinates.</param>
     public Cell[] Generate(int width, int height, IEnumerable<Coordinate> playerStartCoordinates)
     {
         var cells = new List<Cell>();
@@ -26,6 +35,14 @@ public class Main_MapGenerator
         return cells.ToArray();
     }
 
+    /// <summary>
+    /// 任意の座標が対象座標の一定範囲内にあるかどうかをチェックします
+    /// </summary>
+    /// <returns><c>true</c> if this instance is target coordinates or around the specified coordinate targetCoordinates
+    /// limitDistance; otherwise, <c>false</c>.</returns>
+    /// <param name="coordinate">Coordinate.</param>
+    /// <param name="targetCoordinates">Target coordinates.</param>
+    /// <param name="limitDistance">Limit distance.</param>
     bool IsTargetCoordinatesOrAround(Coordinate coordinate, IEnumerable<Coordinate> targetCoordinates, float limitDistance = 1f)
     {
         foreach (var targetCoordinate in targetCoordinates)
@@ -38,6 +55,9 @@ public class Main_MapGenerator
         return false;
     }
 
+    /// <summary>
+    /// 座標
+    /// </summary>
     public struct Coordinate
     {
         public int x;
@@ -70,6 +90,9 @@ public class Main_MapGenerator
         }
     }
 
+    /// <summary>
+    /// マス情報
+    /// </summary>
     public struct Cell
     {
         public enum Types

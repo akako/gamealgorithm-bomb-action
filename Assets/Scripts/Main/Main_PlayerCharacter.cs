@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// プレイヤーキャラ
+/// </summary>
 [RequireComponent(typeof(Rigidbody2D))]
 public class Main_PlayerCharacter : Main_DestroyableObject
 {
@@ -24,9 +27,12 @@ public class Main_PlayerCharacter : Main_DestroyableObject
             return;
         }
 
+        // キー操作に応じて移動
         rigidbodyCache.velocity = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")) * speed;
 
         putBoms.RemoveAll(x => null == x);
+
+        // 爆弾を置く処理
         if (Input.GetButtonDown("Fire1") && putBoms.Count < puttableBomCount && Main_SceneController.Instance.IsBomPuttable(transform.position))
         {
             var bom = Main_SceneController.Instance.SpawnBom(transform.position, firePower);

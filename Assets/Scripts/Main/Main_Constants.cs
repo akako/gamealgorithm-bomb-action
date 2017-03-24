@@ -1,6 +1,9 @@
-﻿public class Main_Constants
+﻿/// <summary>
+/// 定数群
+/// </summary>
+public class Main_Constants
 {
-    public static string TAG_FIRE = "Fire";
-    public static string TAG_WALL = "Wall";
-    public static string TAG_STATIC_WALL = "StaticWall";
+    public const string TAG_FIRE = "Fire";
+    public const string TAG_WALL = "Wall";
+    public const string TAG_STATIC_WALL = "StaticWall";
 }

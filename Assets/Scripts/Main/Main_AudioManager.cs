@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Audioマネージャ
+/// </summary>
 public class Main_AudioManager : MonoBehaviour
 {
     static Main_AudioManager instance;
