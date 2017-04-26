@@ -44,13 +44,20 @@ public class Main_SceneController : MonoBehaviour
 
     void Start()
     {
-        // プレイヤーキャラ配置
-        var playerCharacterSpawnCoordinate = new Main_MapGenerator.Coordinate(1, 1);
-        playerCharacter.transform.position = CoordinateToPosition(playerCharacterSpawnCoordinate);
-
         // マップ情報生成
         var mapGenerator = new Main_MapGenerator();
-        var map = mapGenerator.Generate(13, 13, new Main_MapGenerator.Coordinate[]{ playerCharacterSpawnCoordinate });
+        var roomSettings = new Main_MapGenerator.RoomSettings();
+        roomSettings.minWidth = 4;
+        roomSettings.minHeight = 4;
+        roomSettings.bigRoomRate = 5;
+        roomSettings.maxWallThicknessInArea = 5;
+        var map = mapGenerator.Generate(30, 30, roomSettings);
+
+        // プレイヤーキャラ配置
+        var floors = map.Where(x => x.type == Main_MapGenerator.Cell.Types.Floor).ToArray();
+        var playerCharacterSpawnCoordinate = floors[UnityEngine.Random.Range(0, floors.Length)].coordinate;
+        playerCharacter.transform.position = CoordinateToPosition(playerCharacterSpawnCoordinate);
+
         // マップ情報を元にマップ組み立て
         foreach (var cell in map)
         {
