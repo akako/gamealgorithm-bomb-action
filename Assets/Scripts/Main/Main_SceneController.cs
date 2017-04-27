@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using Common.DictionaryExtension;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 /// <summary>
 /// シーンコントローラ
 /// </summary>
 public class Main_SceneController : MonoBehaviour
 {
+    static int gameLevel = 1;
     static Main_SceneController instance;
 
     public static Main_SceneController Instance
@@ -16,8 +19,7 @@ public class Main_SceneController : MonoBehaviour
         get { return instance; }
     }
 
-    [SerializeField]
-    Main_PlayerCharacter playerCharacter;
+    public Main_PlayerCharacter playerCharacter;
     [SerializeField]
     GameObject staticWallPrefab;
     [SerializeField]
@@ -27,11 +29,38 @@ public class Main_SceneController : MonoBehaviour
     [SerializeField]
     Main_Bom bomPrefab;
     [SerializeField]
+    Main_Pitfall pitfallPrefab;
+    [SerializeField]
     Main_Fire firePrefab;
+    [SerializeField]
+    Text bomAmount;
+    [SerializeField]
+    Text pitfallAmount;
+    [SerializeField]
+    Text instantWallAmount;
+    [SerializeField]
+    Text gameLevelText;
+    [SerializeField]
+    Text messageText;
+    [SerializeField]
+    Main_Stairs stairs;
+    [SerializeField]
+    Main_EnemySimple enemySimplePrefab;
+    [SerializeField]
+    Main_EnemyHoming enemyHomingPrefab;
+    [SerializeField]
+    Main_EnemyIgnoreWall enemyIgnoreWallPrefab;
 
     Dictionary<Main_MapGenerator.Coordinate, GameObject> staticWalls = new Dictionary<Main_MapGenerator.Coordinate, GameObject>();
     Dictionary<Main_MapGenerator.Coordinate, Main_Wall> walls = new Dictionary<Main_MapGenerator.Coordinate, Main_Wall>();
     Dictionary<Main_MapGenerator.Coordinate, Main_Bom> boms = new Dictionary<Main_MapGenerator.Coordinate, Main_Bom>();
+    Dictionary<Main_MapGenerator.Coordinate, Main_Pitfall> pitfalls = new Dictionary<Main_MapGenerator.Coordinate, Main_Pitfall>();
+
+    public static void StartGame()
+    {
+        gameLevel = 1;
+        SceneManager.LoadScene("Main");
+    }
 
     void Awake()
     {
@@ -47,16 +76,21 @@ public class Main_SceneController : MonoBehaviour
         // マップ情報生成
         var mapGenerator = new Main_MapGenerator();
         var roomSettings = new Main_MapGenerator.RoomSettings();
-        roomSettings.minWidth = 4;
-        roomSettings.minHeight = 4;
-        roomSettings.bigRoomRate = 5;
-        roomSettings.maxWallThicknessInArea = 5;
-        var map = mapGenerator.Generate(30, 30, roomSettings);
+        roomSettings.minWidth = 2;
+        roomSettings.minHeight = 2;
+        roomSettings.bigRoomRate = 1;
+        roomSettings.maxWallThicknessInArea = 2;
+        var width = Random.Range(20, 20 + gameLevel);
+        var height = Random.Range(20, 20 + gameLevel);
+        var map = mapGenerator.Generate(width, height, roomSettings);
 
         // プレイヤーキャラ配置
-        var floors = map.Where(x => x.type == Main_MapGenerator.Cell.Types.Floor).ToArray();
-        var playerCharacterSpawnCoordinate = floors[UnityEngine.Random.Range(0, floors.Length)].coordinate;
-        playerCharacter.transform.position = CoordinateToPosition(playerCharacterSpawnCoordinate);
+        var emptyFloors = map.Where(x => x.type == Main_MapGenerator.Cell.Types.Floor).ToList();
+        var playerCell = emptyFloors[UnityEngine.Random.Range(0, emptyFloors.Count)];
+        playerCharacter.transform.position = CoordinateToPosition(playerCell.coordinate);
+        emptyFloors.Remove(playerCell);
+        // プレイヤー周囲のマスは何も置かない
+        emptyFloors.RemoveAll(x => Mathf.Sqrt(Mathf.Pow(x.coordinate.x - playerCell.coordinate.x, 2f) + Mathf.Pow(x.coordinate.y - playerCell.coordinate.y, 2f)) < 5f);
 
         // マップ情報を元にマップ組み立て
         foreach (var cell in map)
@@ -76,6 +110,55 @@ public class Main_SceneController : MonoBehaviour
             }
         }
 
+        // 階段を配置
+        var stairsCell = emptyFloors[UnityEngine.Random.Range(0, emptyFloors.Count)];
+        stairs.transform.position = CoordinateToPosition(stairsCell.coordinate);
+        emptyFloors.Remove(stairsCell);
+
+        // 敵を配置
+        for (var i = 0; i < 5 + gameLevel / 2; i++)
+        {
+            var enemyCell = emptyFloors[UnityEngine.Random.Range(0, emptyFloors.Count)];
+            var enemy = Instantiate(enemySimplePrefab, CoordinateToPosition(enemyCell.coordinate), Quaternion.identity);
+            enemy.Initialize(Random.Range(0.3f, 1f + (float)gameLevel / 10f));
+            emptyFloors.Remove(enemyCell);
+        }
+        for (var i = 0; i < gameLevel / 3; i++)
+        {
+            var enemyCell = emptyFloors[UnityEngine.Random.Range(0, emptyFloors.Count)];
+            var enemy = Instantiate(enemyHomingPrefab, CoordinateToPosition(enemyCell.coordinate), Quaternion.identity);
+            enemy.Initialize(Random.Range(0.5f, 1f + (float)gameLevel / 10f));
+            emptyFloors.Remove(enemyCell);
+        }
+        for (var i = 0; i < gameLevel / 6; i++)
+        {
+            var enemyCell = emptyFloors[UnityEngine.Random.Range(0, emptyFloors.Count)];
+            var enemy = Instantiate(enemyIgnoreWallPrefab, CoordinateToPosition(enemyCell.coordinate), Quaternion.identity);
+            enemy.Initialize(Random.Range(0.2f, 0.5f + (float)gameLevel / 30f));
+            emptyFloors.Remove(enemyCell);
+        }
+
+        gameLevelText.text = "Lv." + gameLevel;
+
+        StartCoroutine(ReadyCoroutine());
+    }
+
+    void Update()
+    {
+        bomAmount.text = "x" + Main_PlayerCharacter.bomAmount;
+        pitfallAmount.text = "x" + Main_PlayerCharacter.pitfallAmount;
+        instantWallAmount.text = "x" + Main_PlayerCharacter.instantWallAmount;
+    }
+
+    IEnumerator ReadyCoroutine()
+    {
+        Time.timeScale = 0f;
+        messageText.text = "Ready...";
+        yield return new WaitForSecondsRealtime(2f);
+        messageText.text = "GO!!";
+        Time.timeScale = 1f;
+        yield return new WaitForSecondsRealtime(1f);
+        messageText.text = "";
     }
 
     /// <summary>
@@ -84,16 +167,32 @@ public class Main_SceneController : MonoBehaviour
     /// <returns>The bom.</returns>
     /// <param name="position">Position.</param>
     /// <param name="firePower">Fire power.</param>
-    public Main_Bom SpawnBom(Vector3 position, int firePower)
+    public void SpawnBom(Vector3 position, int firePower)
     {
         Main_AudioManager.Instance.put.Play();
-        walls.RemoveAll((k, v) => null == v);
 
         var coordinate = Main_SceneController.Instance.PositionToCoordinate(position);
         var bom = Instantiate(bomPrefab, CoordinateToPosition(coordinate), Quaternion.identity);
         bom.Initialize(coordinate, firePower);
         boms.Add(coordinate, bom);
-        return bom;
+    }
+
+    public void SpawnPitfall(Vector3 position)
+    {
+        Main_AudioManager.Instance.put.Play();
+
+        var coordinate = Main_SceneController.Instance.PositionToCoordinate(position);
+        var pitfall = Instantiate(pitfallPrefab, CoordinateToPosition(coordinate), Quaternion.identity);
+        pitfalls.Add(coordinate, pitfall);
+    }
+
+    public void SpawnWall(Vector3 position)
+    {
+        Main_AudioManager.Instance.put.Play();
+
+        var coordinate = Main_SceneController.Instance.PositionToCoordinate(position);
+        var wall = Instantiate(wallPrefab, CoordinateToPosition(coordinate), Quaternion.identity);
+        walls.Add(coordinate, wall);
     }
 
     /// <summary>
@@ -103,6 +202,8 @@ public class Main_SceneController : MonoBehaviour
     /// <param name="firePower">Fire power.</param>
     public void SpawnFire(Main_MapGenerator.Coordinate coordinate, int firePower)
     {
+        walls.RemoveAll((k, v) => null == v);
+
         // 炎の伸びる方向を定義
         var directions = new Main_MapGenerator.Coordinate[]
         {
@@ -114,6 +215,7 @@ public class Main_SceneController : MonoBehaviour
 
         // まずは爆弾と同じマスに炎を出現
         Instantiate(firePrefab, CoordinateToPosition(coordinate), Quaternion.identity);
+
         // 各方向に対して順次炎を伸ばしていく
         foreach (var direction in directions)
         {
@@ -137,16 +239,31 @@ public class Main_SceneController : MonoBehaviour
     }
 
     /// <summary>
-    /// 任意の位置に爆弾が配置可能かどうかを返します
+    /// 空のマスどうかを返します
     /// </summary>
-    /// <returns><c>true</c> if this instance is bom puttable the specified position; otherwise, <c>false</c>.</returns>
+    /// <returns><c>true</c> if this instance is empty cell the specified position; otherwise, <c>false</c>.</returns>
     /// <param name="position">Position.</param>
-    public bool IsBomPuttable(Vector3 position)
+    public bool IsEmptyCell(Vector3 position)
+    {
+        var coordinate = Main_SceneController.Instance.PositionToCoordinate(position);
+        return IsEmptyCell(coordinate);
+    }
+
+    /// <summary>
+    /// 空のマスどうかを返します
+    /// </summary>
+    /// <returns><c>true</c> if this instance is empty cell the specified coordinate; otherwise, <c>false</c>.</returns>
+    /// <param name="coordinate">Coordinate.</param>
+    public bool IsEmptyCell(Main_MapGenerator.Coordinate coordinate, bool ignorePitfalls = false, bool ignoreWalls = false)
     {
         boms.RemoveAll((k, v) => null == v);
+        pitfalls.RemoveAll((k, v) => null == v);
+        walls.RemoveAll((k, v) => null == v);
 
-        var coordinate = Main_SceneController.Instance.PositionToCoordinate(position);
-        return !boms.ContainsKey(coordinate) && !walls.ContainsKey(coordinate);
+        return !boms.ContainsKey(coordinate) &&
+        (ignorePitfalls || !pitfalls.ContainsKey(coordinate)) &&
+        (ignoreWalls || !walls.ContainsKey(coordinate))
+        && !staticWalls.ContainsKey(coordinate);
     }
 
     /// <summary>
@@ -169,5 +286,35 @@ public class Main_SceneController : MonoBehaviour
     public Vector3 CoordinateToPosition(Main_MapGenerator.Coordinate coordinate)
     {
         return new Vector3(coordinate.x, coordinate.y);
+    }
+
+    public void GameOver()
+    {
+        StartCoroutine(GameOverCoroutine());
+    }
+
+    IEnumerator GameOverCoroutine()
+    {
+        messageText.text = "Game Over";
+        yield return new WaitForSecondsRealtime(10f);
+        gameLevel = 1;
+        SceneManager.LoadScene("Main");
+    }
+
+    public void NextLevel()
+    {
+        StartCoroutine(NextLevelCoroutine());
+    }
+
+    IEnumerator NextLevelCoroutine()
+    {
+        Time.timeScale = 0f;
+        messageText.text = string.Format("Lv.{0} Clear!", gameLevel);
+        yield return new WaitForSecondsRealtime(2f);
+        gameLevel++;
+        Main_PlayerCharacter.bomAmount += 1;
+        Main_PlayerCharacter.pitfallAmount += 1;
+        Main_PlayerCharacter.instantWallAmount += 1;
+        SceneManager.LoadScene("Main");
     }
 }
