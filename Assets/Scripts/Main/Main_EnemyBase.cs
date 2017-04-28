@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 敵キャラ基底クラス
+/// </summary>
 abstract public class Main_EnemyBase : Main_DestroyableObject
 {
     protected Rigidbody2D rigidbodyCache;
@@ -13,6 +16,10 @@ abstract public class Main_EnemyBase : Main_DestroyableObject
         rigidbodyCache = GetComponent<Rigidbody2D>();
     }
 
+    /// <summary>
+    /// 初期化します
+    /// </summary>
+    /// <param name="speed">Speed.</param>
     public void Initialize(float speed)
     {
         this.speed = speed;
@@ -26,6 +33,9 @@ abstract public class Main_EnemyBase : Main_DestroyableObject
         }
     }
 
+    /// <summary>
+    /// ダメージを与えます
+    /// </summary>
     public void Damage()
     {
         rigidbodyCache.velocity = Vector3.zero;

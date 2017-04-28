@@ -28,6 +28,7 @@ public class Main_EnemySimple : Main_EnemyBase
         var coordinate = Main_SceneController.Instance.PositionToCoordinate(transform.position + new Vector3(moveVector.x, moveVector.y) * 0.5f);
         if (!Main_SceneController.Instance.IsEmptyCell(coordinate, true))
         {
+            // 障害物が目の前にあったら曲がる
             moveVector = new Vector2((Random.Range(0, 2) == 1 ? -1 : 1) * moveVector.y, (Random.Range(0, 2) == 1 ? -1 : 1) * moveVector.x);
         }
         rigidbodyCache.velocity = moveVector * speed;

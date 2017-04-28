@@ -10,10 +10,12 @@ public class Main_EnemyHoming : Main_EnemyBase
         var diff = playerPos - transform.position;
         if (diff.magnitude < 3f)
         {
+            // 一定距離以内にプレイヤーが居る場合は追いかける
             moveVector = diff.normalized;
         }
         else
         {
+            // それ以外はSimpleと同じ動き
             if (moveVector == Vector2.zero)
             {
                 switch (Random.Range(0, 4))

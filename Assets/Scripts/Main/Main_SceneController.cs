@@ -177,6 +177,10 @@ public class Main_SceneController : MonoBehaviour
         boms.Add(coordinate, bom);
     }
 
+    /// <summary>
+    /// 落とし穴を出現させます
+    /// </summary>
+    /// <param name="position">Position.</param>
     public void SpawnPitfall(Vector3 position)
     {
         Main_AudioManager.Instance.put.Play();
@@ -186,6 +190,10 @@ public class Main_SceneController : MonoBehaviour
         pitfalls.Add(coordinate, pitfall);
     }
 
+    /// <summary>
+    /// 壁を出現させます
+    /// </summary>
+    /// <param name="position">Position.</param>
     public void SpawnWall(Vector3 position)
     {
         Main_AudioManager.Instance.put.Play();
@@ -288,30 +296,48 @@ public class Main_SceneController : MonoBehaviour
         return new Vector3(coordinate.x, coordinate.y);
     }
 
+    /// <summary>
+    /// ゲームオーバー処理
+    /// </summary>
     public void GameOver()
     {
         StartCoroutine(GameOverCoroutine());
     }
 
+    /// <summary>
+    /// ゲームオーバー処理コルーチン
+    /// </summary>
+    /// <returns>The over coroutine.</returns>
     IEnumerator GameOverCoroutine()
     {
         messageText.text = "Game Over";
-        yield return new WaitForSecondsRealtime(10f);
+        yield return new WaitForSecondsRealtime(5f);
         gameLevel = 1;
+        Main_PlayerCharacter.bomAmount = 3;
+        Main_PlayerCharacter.pitfallAmount = 3;
+        Main_PlayerCharacter.instantWallAmount = 3;
         SceneManager.LoadScene("Main");
     }
 
+    /// <summary>
+    /// 次のレベルに進む処理
+    /// </summary>
     public void NextLevel()
     {
         StartCoroutine(NextLevelCoroutine());
     }
 
+    /// <summary>
+    /// 次のレベルに進むコルーチン
+    /// </summary>
+    /// <returns>The level coroutine.</returns>
     IEnumerator NextLevelCoroutine()
     {
         Time.timeScale = 0f;
         messageText.text = string.Format("Lv.{0} Clear!", gameLevel);
         yield return new WaitForSecondsRealtime(2f);
         gameLevel++;
+        // 罠を１個ずつ補充
         Main_PlayerCharacter.bomAmount += 1;
         Main_PlayerCharacter.pitfallAmount += 1;
         Main_PlayerCharacter.instantWallAmount += 1;

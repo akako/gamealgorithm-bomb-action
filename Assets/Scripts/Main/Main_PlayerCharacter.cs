@@ -37,7 +37,7 @@ public class Main_PlayerCharacter : Main_DestroyableObject
         // キー操作に応じて移動
         rigidbodyCache.velocity = new Vector2(CrossPlatformInputManager.GetAxis("Horizontal"), CrossPlatformInputManager.GetAxis("Vertical")).normalized * speed;
 
-        // 罠を置く処理
+        // 各種の罠を置く処理
         if (cooldown < 0f && CrossPlatformInputManager.GetButton("Fire1") && bomAmount > 0 && Main_SceneController.Instance.IsEmptyCell(transform.position))
         {
             bomAmount--;
