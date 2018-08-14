@@ -31,6 +31,14 @@ abstract public class Main_EnemyBase : Main_DestroyableObject
         {
             Damage();
         }
+        else if (collision2D.gameObject.tag == Main_Constants.TAG_ENEMY && collision2D.gameObject.GetComponent<Main_EnemyBase>().speed < speed)
+        {
+            Turn();
+        }
+    }
+
+    protected virtual void Turn()
+    {
     }
 
     /// <summary>

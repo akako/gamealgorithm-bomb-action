@@ -38,9 +38,14 @@ public class Main_EnemyHoming : Main_EnemyBase
             var coordinate = Main_SceneController.Instance.PositionToCoordinate(transform.position + new Vector3(moveVector.x, moveVector.y) * 0.5f);
             if (!Main_SceneController.Instance.IsEmptyCell(coordinate, true))
             {
-                moveVector = new Vector2((Random.Range(0, 2) == 1 ? -1 : 1) * moveVector.y, (Random.Range(0, 2) == 1 ? -1 : 1) * moveVector.x);
+                Turn();
             }
         }
         rigidbodyCache.velocity = moveVector * speed;
+    }
+
+    protected override void Turn()
+    {
+        moveVector = new Vector2((Random.Range(0, 2) == 1 ? -1 : 1) * moveVector.y, (Random.Range(0, 2) == 1 ? -1 : 1) * moveVector.x);
     }
 }

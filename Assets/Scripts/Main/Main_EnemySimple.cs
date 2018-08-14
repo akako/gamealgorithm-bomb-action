@@ -29,8 +29,13 @@ public class Main_EnemySimple : Main_EnemyBase
         if (!Main_SceneController.Instance.IsEmptyCell(coordinate, true))
         {
             // 障害物が目の前にあったら曲がる
-            moveVector = new Vector2((Random.Range(0, 2) == 1 ? -1 : 1) * moveVector.y, (Random.Range(0, 2) == 1 ? -1 : 1) * moveVector.x);
+            Turn();
         }
         rigidbodyCache.velocity = moveVector * speed;
+    }
+
+    protected override void Turn()
+    {
+        moveVector = new Vector2((Random.Range(0, 2) == 1 ? -1 : 1) * moveVector.y, (Random.Range(0, 2) == 1 ? -1 : 1) * moveVector.x);
     }
 }
